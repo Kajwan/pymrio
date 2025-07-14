@@ -92,6 +92,11 @@ from pymrio.tools.ioutil import (
     index_match,
     to_long,
 )
+from pymrio.tools.tshelper import (
+    apply_method,
+    apply_function,
+    extract_from_mrioseries,
+)
 from pymrio.version import __version__
 
 __all__ = [
@@ -167,4 +172,7 @@ __all__ = [
     # Add any explicit imports from fileio and ioparser here
     # "load_data",
     # "parse_io_data",
+    "extract_from_mrioseries",
+    "apply_method",
+    "apply_function",
 ]
