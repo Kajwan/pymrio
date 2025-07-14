@@ -58,6 +58,7 @@ dev = [
   "sphinx >= 1.6.4",
   "sphinx_rtd_theme >= 0.2.4",
   "ipykernel",
+  "debugpy",
   "nbsphinx",
   "more-itertools",
   "poethepoet",
@@ -192,6 +193,13 @@ shell  = """
 make -C ./doc clean
 make -C ./doc html
 """
+
+[tool.poe.tasks.jl]
+help = "Open doc notebook folder"
+shell  = """
+uv run jupyter lab --notebook-dir=./doc/source/notebooks
+"""
+
 
 [tool.poe.tasks.build]
 help = "Format, test with coverage and build docs"

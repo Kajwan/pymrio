@@ -6,10 +6,16 @@ Changelog
 v0.6.3dev
 ******************
 
+New Features
+============
+
+* function for extracting data from a time series of mrios (extract_from_mrioseries).
+
 Bugfixes
 ========
 
 * Various smaller bugfixes
+* Argument include_core in load and load_all works as expected
 
 Miscellaneous
 =============
