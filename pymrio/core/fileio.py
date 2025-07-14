@@ -43,7 +43,7 @@ def _get_file_format(file_name):
     return table_format
 
 
-def load_all(path, include_core=True, subfolders=None, path_in_arc=None):
+def load_all(path, include_core=True, subfolders=None, path_in_arc=None, subset=None):
     """Load a full IO system with all extension from path.
 
     Parameters
@@ -83,11 +83,18 @@ def load_all(path, include_core=True, subfolders=None, path_in_arc=None):
         zip archive (thus only one file_parameter file as the systemtype entry
         'IOSystem'.
 
+    subset: string or list of strings, optional
+        Which accounts to load, e.g. 'D_cba', 'Z', etc
+        If None (default), load all accounts
+
     """
 
     def clean(varStr):
         """Get valid python name from folder."""
         return re.sub(r"\W|^(?=\d)", "_", str(varStr))
+
+    if isinstance(subfolders, (str, Path)):
+        subfolders = [subfolders]
 
     path = Path(path)
 
@@ -133,7 +140,7 @@ def load_all(path, include_core=True, subfolders=None, path_in_arc=None):
 
         logging.debug(f"Expect file parameter-file at {path_in_arc} in {path}")
 
-    io = load(path, include_core=include_core, path_in_arc=path_in_arc)
+    io = load(path, include_core=include_core, path_in_arc=path_in_arc, subset=subset)
 
     if zipfile.is_zipfile(str(path)):
         root_in_zip = os.path.dirname(path_in_arc)
@@ -160,7 +167,7 @@ def load_all(path, include_core=True, subfolders=None, path_in_arc=None):
                 subfolder_full_meta = subfolder_full
 
             if subfolder_full_meta in zipcontent:
-                ext = load(path, include_core=include_core, path_in_arc=subfolder_full_meta)
+                ext = load(path, include_core=include_core, path_in_arc=subfolder_full_meta, subset=subset)
                 setattr(io, clean(subfolder_name), ext)
                 io.meta._add_fileio(f"Added satellite account from {subfolder_full}")
             else:
@@ -183,7 +190,7 @@ def load_all(path, include_core=True, subfolders=None, path_in_arc=None):
                 subfolder_full_meta = subfolder_full
 
             if subfolder_full_meta.exists():
-                ext = load(subfolder_full, include_core=include_core)
+                ext = load(subfolder_full, include_core=include_core, subset=subset)
                 setattr(io, clean(subfolder_name), ext)
                 io.meta._add_fileio(f"Added satellite account from {subfolder_full}")
             else:
@@ -192,7 +199,7 @@ def load_all(path, include_core=True, subfolders=None, path_in_arc=None):
     return io
 
 
-def load(path, include_core=True, path_in_arc=""):
+def load(path, include_core=True, path_in_arc="", subset=None):
     """Load a IOSystem or Extension previously saved with pymrio.
 
     This function can be used to load a IOSystem or Extension specified in a
@@ -223,6 +230,11 @@ def load(path, include_core=True, path_in_arc=""):
         for data in e.g. the folder 'emissions' pass 'emissions/'.  Only used
         if parameter 'path' points to an compressed zip file.
 
+    subset: string or list of strings, optional
+        Which accounts to load, e.g. 'D_cba', 'Z', etc
+        If None (default), load all accounts
+
+
     Returns
     -------
         IOSystem or Extension class depending on systemtype in the json file
@@ -230,6 +242,9 @@ def load(path, include_core=True, path_in_arc=""):
 
     """
     path = Path(path)
+
+    if type(subset) is str:
+        subset = [subset]
 
     if not path.exists():
         raise ReadError("Given path does not exist")
@@ -259,7 +274,10 @@ def load(path, include_core=True, path_in_arc=""):
         return None
 
     for key in file_para.content["files"]:
-        if not include_core and key not in ["A", "L", "Z"]:
+        if not include_core and key in ["A", "L", "Z"]:
+            continue
+
+        if (subset is not None) and key not in subset:
             continue
 
         file_name = file_para.content["files"][key]["name"]

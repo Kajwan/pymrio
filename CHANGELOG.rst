@@ -10,6 +10,7 @@ Bugfixes
 ========
 
 * Various smaller bugfixes
+* Argument include_core in load and load_all works as expected
 
 Miscellaneous
 =============

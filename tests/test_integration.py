@@ -331,6 +331,76 @@ def test_pickle_fileio(tmpdir):
 
     assert mr_load == mr
 
+    # checking partial read
+
+
+def test_partial_reads(tmpdir):
+    """Test various partial reads possibilities."""
+    mr = pymrio.load_test()
+    mr.calc_all()
+
+    assert "A" in mr.get_DataFrame()
+    assert "Y" in mr.get_DataFrame()
+    assert "D_cba" in mr.emissions.get_DataFrame()
+    assert "D_pba" in mr.emissions.get_DataFrame()
+
+    save_path = str(tmpdir.mkdir("pymrio_part_csv"))
+    mr.save_all(save_path, table_format="csv")
+
+    mr_load = pymrio.load_all(save_path, subset=["Z", "D_cba"])
+
+    assert "Z" in mr_load.get_DataFrame()
+    assert "A" not in mr_load.get_DataFrame()
+    assert "Y" not in mr_load.get_DataFrame()
+    assert "D_cba" in mr_load.emissions.get_DataFrame()
+    assert "D_pba" not in mr_load.emissions.get_DataFrame()
+    assert "F" not in mr_load.emissions.get_DataFrame()
+    assert "D_cba" in mr_load.factor_inputs.get_DataFrame()
+    assert "D_pba" not in mr_load.factor_inputs.get_DataFrame()
+    assert "F" not in mr_load.factor_inputs.get_DataFrame()
+
+    mr_load_emis = pymrio.load_all(save_path, subfolders="emissions", subset=["Z", "D_cba"])
+    mr_load_emis2 = pymrio.load_all(save_path, subfolders=["emissions", "abc"], subset=["Z", "D_cba"])
+
+    assert "Z" in mr_load_emis.get_DataFrame()
+    assert "A" not in mr_load_emis.get_DataFrame()
+    assert "Y" not in mr_load_emis.get_DataFrame()
+    assert "D_cba" in mr_load_emis.emissions.get_DataFrame()
+    assert "D_pba" not in mr_load_emis.emissions.get_DataFrame()
+    assert "F" not in mr_load_emis.emissions.get_DataFrame()
+    assert "factor_inputs" not in mr_load_emis.get_extensions()
+    assert "Z" in mr_load_emis2.get_DataFrame()
+    assert "A" not in mr_load_emis2.get_DataFrame()
+    assert "Y" not in mr_load_emis2.get_DataFrame()
+    assert "D_cba" in mr_load_emis2.emissions.get_DataFrame()
+    assert "D_pba" not in mr_load_emis2.emissions.get_DataFrame()
+    assert "F" not in mr_load_emis2.emissions.get_DataFrame()
+    assert "factor_inputs" not in mr_load_emis2.get_extensions()
+
+    mr_load_only_emis = pymrio.load_all(save_path, subfolders="emissions", include_core=False, subset=["Z", "D_cba"])
+    assert "Z" not in mr_load_only_emis.get_DataFrame()
+    assert "A" not in mr_load_only_emis.get_DataFrame()
+    assert "Y" not in mr_load_only_emis.get_DataFrame()
+    assert "D_cba" in mr_load_only_emis.emissions.get_DataFrame()
+    assert "D_pba" not in mr_load_only_emis.emissions.get_DataFrame()
+    assert "F" not in mr_load_only_emis.emissions.get_DataFrame()
+    assert "factor_inputs" not in mr_load_only_emis.get_extensions()
+    del mr_load_only_emis
+
+    save_path_par = str(tmpdir.mkdir("pymrio_test_part_parquet"))
+
+    mr.save_all(save_path_par, table_format="parquet")
+    mr_load_only_emis = pymrio.load_all(
+        save_path_par, subfolders="emissions", include_core=False, subset=["Z", "D_cba"]
+    )
+    assert "Z" not in mr_load_only_emis.get_DataFrame()
+    assert "A" not in mr_load_only_emis.get_DataFrame()
+    assert "Y" not in mr_load_only_emis.get_DataFrame()
+    assert "D_cba" in mr_load_only_emis.emissions.get_DataFrame()
+    assert "D_pba" not in mr_load_only_emis.emissions.get_DataFrame()
+    assert "F" not in mr_load_only_emis.emissions.get_DataFrame()
+    assert "factor_inputs" not in mr_load_only_emis.get_extensions()
+
 
 def test_reports(tmpdir):
     """Tests the reporting function.
