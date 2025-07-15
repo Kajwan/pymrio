@@ -26,7 +26,7 @@ class HEM():
         A : pd.DataFrame, optional
             Input-output coefficients matrix. If not provided, the one from the IOSystem will be used.
         x : pd.DataFrame, optional
-            Total output vector as a single column matrix, named IndOut. If not provided, the one from the IOSystem will be used.
+            Total output vector as a single column matrix, named indout. If not provided, the one from the IOSystem will be used.
         L : pd.DataFrame, optional
             Leontief inverse matrix. If not provided, it will be calculated from A.
         meta : dict, optional
@@ -73,7 +73,7 @@ class HEM():
         A : pd.DataFrame, optional
             Input-output coefficients matrix. If not provided, the one from the IOSystem will be used.
         x : pd.DataFrame, optional
-            Total output vector as a single column matrix, named IndOut. If not provided, the one from the IOSystem will be used.
+            Total output vector as a single column matrix, named indout. If not provided, the one from the IOSystem will be used.
         downstream_allocation_matrix : str, optional
             The matrix used to allocate downstream production. Defaults to "A12". Can be either "A12" or "L12".
         Returns 
@@ -356,7 +356,6 @@ class HEM():
             If no save path is provided.
 
         """
-
 
         if impact_account is None:
             save_path = Path(self.extraction_save_path) / "impacts" 
