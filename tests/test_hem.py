@@ -17,6 +17,7 @@ sys.path.append(os.path.join(TESTPATH, ".."))
 # the function which should be tested here
 from pymrio.tools.iohem import HEM
 
+@pytest.fixture()
 def td_small_MRIO():
     """Small MRIO with three sectors and two regions.
 
