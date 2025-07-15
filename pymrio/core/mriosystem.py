@@ -48,6 +48,7 @@ from pymrio.tools.iomath import (
     calc_Z,
     recalc_M,
 )
+from pymrio.tools.iohem import HEM
 from pymrio.tools.iometadata import MRIOMetaData
 
 # internal functions
@@ -3356,6 +3357,72 @@ class IOSystem(_BaseSystem):
 
         """
         return extension_concate(*list(self.get_extensions(data=True)), new_extension_name=new_extension_name)
+    
+    def apply_HEM(
+            self,
+            regions,
+            sectors, 
+            extraction_type="1.2", 
+            multipliers=True, 
+            downstream_allocation_matrix="A12",
+            save_extraction=True,
+            save_path="./test_extraction",
+            calculate_impacts=True,
+            impact_account = "all",
+            save_impacts=True,
+            save_core_IO=True,
+            save_details=True,
+            return_results=False
+        ):
+        # First, make sure that all necessary matrices are available in IOSystem.
+        if (self.x is None) or (self.Y is None) or (self.A is None):
+            self.calc_system()
+        elif (downstream_allocation_matrix == "L12") and (self.L is None):
+            self.L = self.calc_L(self.A)
+        
+        HEM_object = HEM(IOSystem=None, save_path=save_path)
+
+        HEM_object.make_extraction(
+            regions=regions, 
+            sectors=sectors, 
+            extraction_type=extraction_type, 
+            multipliers=multipliers, 
+            downstream_allocation_matrix=downstream_allocation_matrix
+        )
+
+        if save_extraction:
+            HEM_object.save_extraction(save_core_IO=save_core_IO, save_details=save_details)
+        
+        HEM_results = []
+
+        if calculate_impacts:
+            if impact_account == "all":
+                for impact in self.get_extensions():
+                    impact_extension = getattr(self, impact)
+
+                    if impact_extension.S is None:
+                        impact_extension.S = calc_S(impact_extension.F, self.x)
+                    
+                    HEM_object.calculate_impacts(intensities=impact_extension.S)
+                    if save_impacts:
+                        HEM_object.save_impacts(impact_name=impact)
+                    else:
+                        HEM_results.append(HEM_object)
+            else:
+                impact_extension = getattr(self, impact_account)
+                if impact_extension.S is None:
+                    impact_extension.S = calc_S(impact_extension.F, self.x)
+
+                HEM_object.calculate_impacts(intensities=impact_extension.S)
+                if save_impacts:
+                    HEM_object.save_impacts(impact_name=impact_account)
+                if return_results:
+                    HEM_results.append(HEM_object)
+            return HEM_results
+        elif return_results:
+            HEM_results.append(HEM_object)
+            return HEM_results
+
 
 
 def extension_characterize(
