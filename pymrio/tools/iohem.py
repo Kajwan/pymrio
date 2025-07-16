@@ -294,13 +294,13 @@ class HEM():
 
         # Makes subfolders for individual regions and/or sectors, if it is clearly that a single region and/or sector has been extracted.
         # Will make sure that things are not overwritten, if multiple regions and/or sectors are extracted in a loop.
-        if (len(t1.extraction_regions) == 1) and (len(t1.extraction_sectors) == 1):
+        if (len(self.extraction_regions) == 1) and (len(self.extraction_sectors) == 1):
             extraction_save_path = save_path / f"{self.extraction_regions[0]}_{self.extraction_sectors[0]}" 
         
-        elif (len(t1.extraction_regions) == 1):
+        elif (len(self.extraction_regions) == 1):
             extraction_save_path = save_path / f"{self.extraction_regions[0]}"
         
-        elif (len(t1.extraction_sectors) == 1):
+        elif (len(self.extraction_sectors) == 1):
             extraction_save_path = save_path / f"{self.extraction_sectors[0]}"
         
         else:
@@ -339,7 +339,7 @@ class HEM():
             json.dump(self.meta, json_file, indent=4)
 
 
-    def save_impacts(self, impact_account=None):
+    def save_impacts(self, impact_account=None, specific_impact=None):
         """ 
         Save the impacts of the hypothetical extraction to the specified path.
         
@@ -356,9 +356,10 @@ class HEM():
             If no save path is provided.
 
         """
-
-        if impact_account is None:
-            save_path = Path(self.extraction_save_path) / "impacts" 
+        if (impact_account is None) & (specific_impact is None):
+            save_path = Path(self.extraction_save_path) / "impacts"
+        elif (impact_account is None) & (specific_impact is not None):
+            save_path = Path(self.extraction_save_path) / "impacts" / specific_impact
         else:
             save_path = Path(self.extraction_save_path) / "impacts" / impact_account
         

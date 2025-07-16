@@ -3360,20 +3360,26 @@ class IOSystem(_BaseSystem):
     
     def apply_HEM(
             self,
-            regions,
-            sectors, 
+            regions=None,
+            sectors=None, 
             extraction_type="1.2", 
             multipliers=True, 
             downstream_allocation_matrix="A12",
             save_extraction=True,
             save_path="./test_extraction",
             calculate_impacts=True,
-            impact_account = "all",
+            impact_account="all",
+            specific_impact=None,
             save_impacts=True,
             save_core_IO=True,
             save_details=True,
-            return_results=False
+            return_results=False,
         ):
+        # TODO: Option to whether or not add results as an attribute in PyMRIO object.
+
+        if (regions is None) & (sectors is None):
+            raise ValueError("At least one of regions or sectors must be specified.")
+
         # First, make sure that all necessary matrices are available in IOSystem.
         if (self.x is None) or (self.Y is None) or (self.A is None):
             self.calc_system()
@@ -3403,7 +3409,11 @@ class IOSystem(_BaseSystem):
                     if impact_extension.S is None:
                         impact_extension.S = calc_S(impact_extension.F, self.x)
                     
-                    HEM_object.calculate_impacts(intensities=impact_extension.S)
+                    if specific_impact is None:
+                        HEM_object.calculate_impacts(intensities=impact_extension.S)
+                    else:
+                        HEM_object.calculate_impacts(intensities=impact_extension.S[impact_extension.S.index.isin(specific_impact)])
+                    
                     if save_impacts:
                         HEM_object.save_impacts(impact_name=impact)
                     else:
