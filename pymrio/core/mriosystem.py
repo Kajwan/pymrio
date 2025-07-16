@@ -40,7 +40,7 @@ from pymrio.tools.iomath import (
     calc_gross_trade,
     calc_L,
     calc_M,
-    calc_M_down,
+    calc_M_Ghosh,
     calc_S,
     calc_S_Y,
     calc_x,
@@ -876,9 +876,9 @@ class Extension(_BaseSystem):
     S_Y : pandas.DataFrame
         Direct impact (extensions) coefficients of final demand. Index as F_Y
     M : pandas.DataFrame
-        Multipliers with multiindex as F
-    M_down : pandas.DataFrame
-        Downstream multipliers with multiindex as F
+        Leontief multipliers with multiindex as F
+    M_Ghosh : pandas.DataFrame
+        Ghosh multipliers with multiindex as F
     D_cba : pandas.DataFrame
         Footprint of consumption,  further specification with
         _reg (per region) or _cap (per capita) possible
@@ -917,7 +917,7 @@ class Extension(_BaseSystem):
         S=None,
         S_Y=None,
         M=None,
-        M_down=None,
+        M_Ghosh=None,
         D_cba=None,
         D_pba=None,
         D_imp=None,
@@ -932,7 +932,7 @@ class Extension(_BaseSystem):
         self.S = S
         self.S_Y = S_Y
         self.M = M
-        self.M_down = M_down
+        self.M_Ghosh = M_Ghosh
         self.D_cba = D_cba
         self.D_pba = D_pba
         self.D_imp = D_imp
@@ -975,7 +975,7 @@ class Extension(_BaseSystem):
             "D_exp_cap",
         ]
 
-        self.__coefficients__ = ["S", "S_Y", "M"]
+        self.__coefficients__ = ["S", "S_Y", "M", "M_Ghosh"]
 
         # check if all accounts are available
         for acc in self.__D_accounts__:
@@ -996,7 +996,7 @@ class Extension(_BaseSystem):
         Calculates:
 
         - for each sector and country:
-            S, S_Y (if F_Y available), M, M_down,
+            S, S_Y (if F_Y available), M, M_Ghosh,
             D_cba,
         - for each region:
             D_cba_reg, D_pba_reg, D_imp_reg, D_exp_reg,
@@ -1024,7 +1024,7 @@ class Extension(_BaseSystem):
             the extension).
         G : pandas.DataFrame or numpy.array, optional
             Ghosh input output table G. If this is not given,
-            M_down is not calculated.
+            M_Ghosh is not calculated.
         population : pandas.DataFrame or np.array, optional
             Row vector with population per region
         """
@@ -1073,12 +1073,12 @@ class Extension(_BaseSystem):
                 except Exception as ex:
                     logging.debug(f"Recalculation of M not possible - cause: {ex}")
 
-        if self.M_down is None:
+        if self.M_Ghosh is None:
             if G is not None:
-                self.M_down = calc_M_down(self.S, G)
-                logging.debug(f"{self.name} - M_down calculated based on G")
+                self.M_Ghosh = calc_M_Ghosh(self.S, G)
+                logging.debug(f"{self.name} - M_Ghosh calculated based on G")
             else:
-                logging.debug("Calculation of M_down not possible because G is not available.")
+                logging.debug("Calculation of M_Ghosh not possible because G is not available.")
 
         F_Y_agg = 0
         if self.F_Y is not None:
