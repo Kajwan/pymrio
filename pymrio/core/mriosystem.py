@@ -3466,9 +3466,10 @@ class IOSystem(_BaseSystem):
 
                     HEM_object.calculate_impacts(intensities=impact_extension.S)
                     if save_impacts:
-                        HEM_object.save_impacts(impact_account=impact)
-                    else:
+                        HEM_object.save_impacts(extension=impact)
+                    if return_results:
                         HEM_results.append(HEM_object)
+
             else:
                 impact_extension = getattr(self, extension)
                 if impact_extension.S is None:
@@ -3480,10 +3481,12 @@ class IOSystem(_BaseSystem):
                     HEM_object.calculate_impacts(intensities=impact_extension.S.loc[specific_impact, :])
 
                 if save_impacts:
-                    HEM_object.save_impacts(impact_account=extension, specific_impact=specific_impact)
+                    HEM_object.save_impacts(extension=extension, specific_impact=specific_impact)
                 if return_results:
                     HEM_results.append(HEM_object)
-            return HEM_results
+            if return_results:
+                return HEM_results
+
         elif return_results:
             HEM_results.append(HEM_object)
             return HEM_results
