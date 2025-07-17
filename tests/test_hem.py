@@ -8,6 +8,8 @@ import pandas as pd
 import pandas.testing as pdt
 import pytest
 
+import pymrio
+
 # the function which should be tested here
 from pymrio.core.mriosystem import Extension, IOSystem
 from pymrio.tools.iohem import HEM
@@ -227,7 +229,7 @@ def test_hem_extraction(td_small_MRIO):
         A=td_small_MRIO.A,
         x=td_small_MRIO.x,
         L=td_small_MRIO.L,
-        meta=None,
+        IOSystem_meta=None,
         save_path=None,
     )
     HEM_object.make_extraction(
@@ -247,7 +249,7 @@ def test_hem_extraction_impacts(td_small_MRIO):
         A=td_small_MRIO.A,
         x=td_small_MRIO.x,
         L=td_small_MRIO.L,
-        meta=None,
+        IOSystem_meta=None,
         save_path=None,
     )
     HEM_object.make_extraction(
@@ -483,13 +485,15 @@ def test_hem_io_system_one_sector(td_small_MRIO):
     )
 
 
-def test_hem_io_system_save_all(td_small_MRIO, save_path="./tests/hem_save_test_all", cleanup=True):
+def test_hem_io_system_save_all(save_path="./tests/hem_save_test_all", cleanup=True):
     """Test the HEM calculation with all save options."""
-    IO_object = td_small_MRIO
+    IO_object = pymrio.load_test()
+    extract_regions = [IO_object.regions[0]]
+    extract_sectors = list(IO_object.sectors[:2])
     IO_object.calc_system()
     IO_object.apply_HEM(
-        regions=["reg1"],
-        sectors=["sector1", "sector2"],
+        regions=extract_regions,
+        sectors=extract_sectors,
         extraction_type="1.2",
         multipliers=True,
         downstream_allocation_matrix="A12",
@@ -507,21 +511,25 @@ def test_hem_io_system_save_all(td_small_MRIO, save_path="./tests/hem_save_test_
         shutil.rmtree(save_path)
 
 
-def test_hem_io_system_save_specific(td_small_MRIO, save_path="./tests/hem_save_test_specific", cleanup=True):
+def test_hem_io_system_save_specific(save_path="./tests/hem_save_test_specific", cleanup=True):
     """Test the HEM calculation with specific save options."""
-    IO_object = td_small_MRIO
+    IO_object = pymrio.load_test()
+    extract_regions = [IO_object.regions[0]]
+    extract_sectors = list(IO_object.sectors[:2])
+    extension = list(IO_object.get_extensions())[0]
+    specific_impact = [list(IO_object.get_extensions(data=True))[0].get_index()[0]]
     IO_object.calc_system()
     IO_object.apply_HEM(
-        regions=["reg1"],
-        sectors=["sector1", "sector2"],
+        regions=extract_regions,
+        sectors=extract_sectors,
         extraction_type="1.2",
         multipliers=True,
         downstream_allocation_matrix="A12",
         save_extraction=True,
         save_path=save_path,
         calculate_impacts=True,
-        extension="extensions_one",
-        specific_impact="ext_type_11",
+        extension=extension,
+        specific_impact=specific_impact,
         save_impacts=True,
         save_core_IO=True,
         save_details=True,
@@ -529,3 +537,4 @@ def test_hem_io_system_save_specific(td_small_MRIO, save_path="./tests/hem_save_
     )
     if cleanup:
         shutil.rmtree(save_path)
+
