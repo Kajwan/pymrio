@@ -12,7 +12,7 @@ import pymrio
 
 # the function which should be tested here
 from pymrio.core.mriosystem import Extension, IOSystem
-from pymrio.tools.iohem import HEM
+from pymrio.tools.iohem import HEM, load_extraction
 from pymrio.tools.iomath import calc_S
 
 TESTPATH = os.path.dirname(os.path.abspath(__file__))
@@ -375,7 +375,7 @@ def test_hem_io_system_impact_all_specific(td_small_MRIO):
         )
 
 
-def test_hem_io_system_impact_account_specific(td_small_MRIO):
+def test_hem_io_system_extension_specific(td_small_MRIO):
     """Test the HEM calculation with impact account and specific impact."""
     IO_object = td_small_MRIO
     IO_object.calc_system()
@@ -397,7 +397,7 @@ def test_hem_io_system_impact_account_specific(td_small_MRIO):
     )
 
 
-def test_hem_io_system_impact_account(td_small_MRIO):
+def test_hem_io_system_extension(td_small_MRIO):
     """Test the HEM calculation with impact account."""
     IO_object = td_small_MRIO
     IO_object.calc_system()
@@ -485,7 +485,7 @@ def test_hem_io_system_one_sector(td_small_MRIO):
     )
 
 
-def test_hem_io_system_save_all(save_path="./tests/hem_save_test_all", cleanup=True):
+def test_hem_io_system_save_all(save_path="./tests/hem_save_test_all", cleanup=False):
     """Test the HEM calculation with all save options."""
     IO_object = pymrio.load_test()
     extract_regions = [IO_object.regions[0]]
@@ -538,3 +538,120 @@ def test_hem_io_system_save_specific(save_path="./tests/hem_save_test_specific",
     if cleanup:
         shutil.rmtree(save_path)
 
+def test_hem_load(save_path="./tests/hem_load_test", cleanup=True):
+    """Test the HEM calculation with all save options."""
+    IO_object = pymrio.load_test()
+    extract_regions = [IO_object.regions[0]]
+    extract_sectors = list(IO_object.sectors[:2])
+    IO_object.calc_system()
+    IO_object.apply_HEM(
+        regions=extract_regions,
+        sectors=extract_sectors,
+        extraction_type="1.2",
+        multipliers=True,
+        downstream_allocation_matrix="A12",
+        save_extraction=True,
+        save_path=save_path,
+        calculate_impacts=True,
+        extension="all",
+        specific_impact=None,
+        save_impacts=True,
+        save_core_IO=True,
+        save_details=True,
+        return_results=False,
+    )
+
+    HEM_extraction = load_extraction(
+        extraction_path=f"{save_path}/{IO_object.regions[0]}",
+        load_multipliers=True,
+        load_core=True,
+        load_details=True,
+    )
+
+    if cleanup:
+        shutil.rmtree(save_path)
+
+def test_hem_load_calculate(save_path="./tests/hem_load_test", cleanup=True):
+    """Test the HEM calculation with all save options."""
+    IO_object = pymrio.load_test()
+    extract_regions = [IO_object.regions[0]]
+    extract_sectors = list(IO_object.sectors[:2])
+    IO_object.calc_system()
+    HEM_initial = IO_object.apply_HEM(
+        regions=extract_regions,
+        sectors=extract_sectors,
+        extraction_type="1.2",
+        multipliers=True,
+        downstream_allocation_matrix="A12",
+        save_extraction=True,
+        save_path=save_path,
+        calculate_impacts=True,
+        extension="all",
+        specific_impact=None,
+        save_impacts=True,
+        save_core_IO=True,
+        save_details=True,
+        return_results=True,
+    )
+
+    HEM_object = load_extraction(
+        extraction_path=HEM_initial[0].extraction_save_path,
+        load_multipliers=True,
+        load_core=True,
+        load_details=True,
+    )
+
+    HEM_object.calculate_impacts(
+        intensities=next(IO_object.get_extensions(data=True), None).S
+    )
+
+    if cleanup:
+        shutil.rmtree(save_path)
+
+def test_hem_load_calculate_save(save_path="./tests/hem_load_calculate_save", cleanup=True):
+    """Test the HEM calculation with all save options."""
+    IO_object = pymrio.load_test()
+    extract_regions = [IO_object.regions[1]]
+    extract_sectors = list(IO_object.sectors[:2])
+    IO_object.calc_system()
+    HEM_initial = IO_object.apply_HEM(
+        regions=extract_regions,
+        sectors=extract_sectors,
+        extraction_type="1.2",
+        multipliers=True,
+        downstream_allocation_matrix="A12",
+        save_extraction=True,
+        save_path=save_path,
+        calculate_impacts=False,
+        extension="all",
+        specific_impact=None,
+        save_impacts=False,
+        save_core_IO=True,
+        save_details=True,
+        return_results=True,
+    )[0]
+
+    HEM_object = load_extraction(
+        extraction_path=HEM_initial.extraction_save_path,
+        load_multipliers=True,
+        load_core=True,
+        load_details=True,
+    )
+
+    extension = next(IO_object.get_extensions(data=True), None)
+    extension_name = next(IO_object.get_extensions(data=False), None)
+    intensities = calc_S(
+        extension.F, IO_object.x
+    )
+
+    HEM_object.calculate_impacts(
+        intensities=intensities
+    )
+
+    HEM_object.save_impacts(
+        extension=extension_name,
+        specific_impact=None,
+    )
+
+    if cleanup:
+        shutil.rmtree(save_path)
